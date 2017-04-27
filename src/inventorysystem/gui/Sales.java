@@ -5,9 +5,12 @@
  */
 package inventorysystem.gui;
 
-import inventorysystem.AutoComplete;
+import libs.BorderPadding;
+import libs.AutoComplete;
+import inventory.concrete.ConcreteInventoryObservable;
+import inventory.strategy.ConcreteNotExpiredStrategy;
 import inventorysystem.Interface.Switchable;
-import inventorysystem.data.Product;
+import inventorysystem.data.NotExpiredItem;
 import inventorysystem.data.SalesData;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -15,11 +18,7 @@ import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTable;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -31,22 +30,25 @@ public class Sales extends javax.swing.JPanel implements Switchable {
     private DefaultTableModel model;
     private int cartItemCount = 1;
     private AutoComplete autoCompleteWidget;
-    private Product product;
-    private inventorysystem.Property property;
+    private NotExpiredItem product;
+    private libs.Property property;
+    private ConcreteInventoryObservable _request;
     /**
      * Creates new form Sales
+     * @param r
      */
-    public Sales() {
+    public Sales(ConcreteInventoryObservable r) {
         initComponents();
-        product = new Product();
-
+        _request = r;
+        product = new NotExpiredItem(new ConcreteNotExpiredStrategy(),_request);
+        
         model = new DefaultTableModel();
         cartTable.setModel(model);
         model.addColumn("Id");
         model.addColumn("Item");
         model.addColumn("Quantity");
         model.addColumn("Price");
-        model.addColumn("Discount");
+        model.addColumn("itemID");
         cartTable.getParent().addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(final ComponentEvent e) {
@@ -58,7 +60,7 @@ public class Sales extends javax.swing.JPanel implements Switchable {
             }
         });
         //set logged in user welcome message
-        property = new inventorysystem.Property();
+        property = new libs.Property();
         lblWelcome.setText("Welcome, ".concat(property.readProperty("EMPLOYEE_NAME")));
         
         BorderPadding.addPadding(jLayeredPane2);
@@ -247,6 +249,7 @@ public class Sales extends javax.swing.JPanel implements Switchable {
         rowData.add(getProductName(item));
         rowData.add(qty);
         rowData.add(Integer.parseInt(qty) * getProductPrice(item));
+        rowData.add(getProductID(item));
         model.addRow(rowData);
         cartItemCount++;
 
@@ -258,7 +261,7 @@ public class Sales extends javax.swing.JPanel implements Switchable {
     private void productNameKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_productNameKeyPressed
         // TODO add your handling code here:
         autoCompleteWidget = new AutoComplete(productName);
-        autoCompleteWidget.populateFromDB(autoCompleteWidget, product.getAllProducts());
+        autoCompleteWidget.populateFromDB(autoCompleteWidget, product.getAll());
     }//GEN-LAST:event_productNameKeyPressed
 
     private void btnDeleteItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteItemActionPerformed
@@ -282,7 +285,8 @@ public class Sales extends javax.swing.JPanel implements Switchable {
         // this will help in the inventory part
 //        model.get
         SalesData data;
-        data = new SalesData(model.getDataVector(), property.readProperty("EMPLOYEE_ID"), null);
+        data = new SalesData(_request,model.getDataVector(), property.readProperty("EMPLOYEE_ID"), null);
+        //_request._fireEvents(new ProductEvent(this, product));
         
     }//GEN-LAST:event_btnSaveCartActionPerformed
 
@@ -311,7 +315,7 @@ public class Sales extends javax.swing.JPanel implements Switchable {
     }
 
     /**
-     * On cart data edited update dable model and mark total count
+     * On cart data edited update table model and mark total count
      */
     private void updateTableData() {
         model.addTableModelListener((TableModelEvent e) -> {
@@ -329,7 +333,13 @@ public class Sales extends javax.swing.JPanel implements Switchable {
 //        ..first split the info at the - sign to get name
 //                parse the second part and spilt at : sign to get price
         String price = infoToSplit.split(":")[1];
-        return Double.parseDouble(price);
+        
+        return Double.parseDouble(price.split("-")[0]);
+    }
+    private int getProductID(String infoToSplit){
+        String id = infoToSplit.split("/")[1];
+        //System.out.println(id.);
+        return Integer.parseInt(id.trim());
     }
 
     private double totalCartCost() {

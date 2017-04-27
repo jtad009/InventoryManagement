@@ -11,8 +11,9 @@ package inventorysystem.data;
  */
 public class SalesEmployee extends Employee {
     private String employeeType;
-    public SalesEmployee(String fullname, String username, int employeeId, String gender, String dateOfBirth, String address) {
+    public SalesEmployee(String fullname, String username, int employeeId, String gender, String dateOfBirth, String address,String employeeType) {
         super(fullname, username, employeeId, gender, dateOfBirth, address);
+        this.setEmployeeType(employeeType);
     }
     public void setEmployeeType(String type){
         this.employeeType = type;

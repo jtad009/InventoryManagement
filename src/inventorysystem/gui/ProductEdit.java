@@ -5,103 +5,76 @@
  */
 package inventorysystem.gui;
 
-import inventorysystem.Events.ProductEvent;
-import inventorysystem.Events.Request;
-import inventorysystem.Interface.Switchable;
-import inventorysystem.Property;
-import inventorysystem.data.NumberFormater;
-import inventorysystem.data.Product;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import inventory.concrete.ConcreteInventoryObservable;
+import inventory.strategy.ConcreteItemByIdStrategy;
+import inventory.strategy.ConcreteNotExpiredStrategy;
+import libs.Property;
+import libs.NumberFormater;
+import inventorysystem.data.NotExpiredItem;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
 
 /**
  *
  * @author Epic
  */
-public class ProductEdit extends javax.swing.JPanel implements Switchable {
+public class ProductEdit extends javax.swing.JPanel {
 
     /**
      * Creates new form ProductEdit
      */
     private DefaultTableModel dfm;
-    private Request _requestEvent;
+    private ConcreteInventoryObservable _requestEvent;
     public ListSelectionModel listSelectionModel;
     private Property cache;
 
     private int productID; // the id of the product to edit
-    private Product p;
+    private NotExpiredItem item;
+    private int cartItemCount = 1;
 
     public ProductEdit() {
         initComponents();
         cache = new Property();
     }
 
-    public ProductEdit(Request r) {
+    public ProductEdit(ConcreteInventoryObservable r) {
         initComponents();
         this.fillSupplierList();
         cache = new Property();
         _requestEvent = r;
-
-        p = new Product();
-        _requestEvent.addProductListener(p);
+        item = new NotExpiredItem(new ConcreteNotExpiredStrategy(), r);
         try {
-            this.jTable1.getSelectionModel().clearSelection();
-            dfm = ProductEdit.buildTableModel(p.getAllProducts());
-            
-            this.jTable1.setCellSelectionEnabled(true);
-            this.jTable1.setModel(dfm);
-            this.jTable1.setRowHeight(45);
-            jTable1.getColumn("Update").setCellRenderer(new ButtonRenderer("Update"));
-            jTable1.getColumn("Update").setCellEditor(new ButtonEditor(new JCheckBox()));
-
-            jTable1.getColumn("Delete").setCellRenderer(new ButtonRenderer("Delete"));
-            jTable1.getColumn("Delete").setCellEditor(new ButtonEditor(new JCheckBox()));
-
-            // System.out.println(listSelectionModel.isSelectionEmpty());
+            this.productTable.getSelectionModel().clearSelection();
+            dfm = ProductEdit.buildTableModel(item.getAll());
+            this.productTable.setCellSelectionEnabled(true);
+            this.productTable.setModel(dfm);
+            this.productTable.setRowHeight(45);
         } catch (Exception ex) {
             Logger.getLogger(ProductEdit.class.getName()).log(Level.SEVERE, null, ex);
         }
-        cbmManufactureDate.setDateFormat(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss "));
-        cbmExpiryDate.setDateFormat(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss"));
+        cbmManufactureDate.setDateFormat(new SimpleDateFormat("yyyy/MM/dd"));
+        cbmExpiryDate.setDateFormat(new SimpleDateFormat("yyyy/MM/dd"));
     }
 
-    public static DefaultTableModel buildTableModel(ResultSet rs)
-            throws Exception {
-
+    public static DefaultTableModel buildTableModel(ResultSet rs) throws Exception {
         ResultSetMetaData metaData = rs.getMetaData();
-
-        // names of columns
         Vector<String> columnNames = new Vector<>();
         int columnCount = metaData.getColumnCount();
         columnNames.add("Serial");
         for (int column = 1; column <= columnCount; column++) {
             columnNames.add(metaData.getColumnLabel(column));
         }
-        columnNames.add("Update");
-        columnNames.add("Delete");
         // data of the table
         Vector<Vector<Object>> data = new Vector<>();
         int num_records = 1;
@@ -112,16 +85,10 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
             for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
                 vector.add(rs.getObject(columnIndex));
             }
-            buttons = new JButton("Delete");
-            update = new JButton("Update");
-            vector.add(update);
-            vector.add(buttons);
             data.add(vector);
             num_records++;
         }
-
         return new DefaultTableModel(data, columnNames);
-
     }
 
     /**
@@ -133,7 +100,7 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jDialog1 = new javax.swing.JDialog();
+        editProductDialog = new javax.swing.JDialog();
         updatePanel = new javax.swing.JPanel();
         jLayeredPane1 = new javax.swing.JLayeredPane();
         jPanel2 = new javax.swing.JPanel();
@@ -162,15 +129,18 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
         costError = new javax.swing.JLabel();
         salesError = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        productTable = new javax.swing.JTable();
         jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        jLayeredPane3 = new javax.swing.JLayeredPane();
+        jButton2 = new javax.swing.JButton("Refresh");
+        updateRow = new javax.swing.JButton();
+        deleteRow = new javax.swing.JButton();
 
-        jDialog1.setTitle("Product Update");
-        jDialog1.setModalityType(java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
-        jDialog1.setName("updateForm"); // NOI18N
-        jDialog1.setResizable(false);
-        jDialog1.setType(java.awt.Window.Type.UTILITY);
+        editProductDialog.setTitle("Product Update");
+        editProductDialog.setModalityType(java.awt.Dialog.ModalityType.TOOLKIT_MODAL);
+        editProductDialog.setName("updateForm"); // NOI18N
+        editProductDialog.setResizable(false);
+        editProductDialog.setType(java.awt.Window.Type.UTILITY);
 
         jLabel1.setText("Name:");
 
@@ -404,28 +374,28 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
         .addComponent(jLayeredPane1, javax.swing.GroupLayout.Alignment.TRAILING)
     );
 
-    javax.swing.GroupLayout jDialog1Layout = new javax.swing.GroupLayout(jDialog1.getContentPane());
-    jDialog1.getContentPane().setLayout(jDialog1Layout);
-    jDialog1Layout.setHorizontalGroup(
-        jDialog1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+    javax.swing.GroupLayout editProductDialogLayout = new javax.swing.GroupLayout(editProductDialog.getContentPane());
+    editProductDialog.getContentPane().setLayout(editProductDialogLayout);
+    editProductDialogLayout.setHorizontalGroup(
+        editProductDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGap(0, 400, Short.MAX_VALUE)
-        .addGroup(jDialog1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jDialog1Layout.createSequentialGroup()
+        .addGroup(editProductDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(editProductDialogLayout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(updatePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE)))
     );
-    jDialog1Layout.setVerticalGroup(
-        jDialog1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+    editProductDialogLayout.setVerticalGroup(
+        editProductDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGap(0, 300, Short.MAX_VALUE)
-        .addGroup(jDialog1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jDialog1Layout.createSequentialGroup()
+        .addGroup(editProductDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(editProductDialogLayout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(updatePanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE)))
     );
 
-    jTable1.setModel(new javax.swing.table.DefaultTableModel(
+    productTable.setModel(new javax.swing.table.DefaultTableModel(
         new Object [][] {
             {null, null}
         },
@@ -433,9 +403,16 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
             "Title 1", "Title 2"
         }
     ));
-    jScrollPane1.setViewportView(jTable1);
+    jScrollPane1.setViewportView(productTable);
 
     jButton1.setText("jButton1");
+    jButton1.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            jButton1ActionPerformed(evt);
+        }
+    });
+
+    jLayeredPane3.setLayout(new java.awt.GridLayout(1, 0));
 
     jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/inventorysystem/gui/imgs/Refresh.png"))); // NOI18N
     jButton2.setToolTipText("refresh table");
@@ -445,6 +422,23 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
             jButton2ActionPerformed(evt);
         }
     });
+    jLayeredPane3.add(jButton2);
+
+    updateRow.setText("Update Row");
+    updateRow.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            updateRowActionPerformed(evt);
+        }
+    });
+    jLayeredPane3.add(updateRow);
+
+    deleteRow.setText("Delete Row");
+    deleteRow.addActionListener(new java.awt.event.ActionListener() {
+        public void actionPerformed(java.awt.event.ActionEvent evt) {
+            deleteRowActionPerformed(evt);
+        }
+    });
+    jLayeredPane3.add(deleteRow);
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
@@ -452,42 +446,33 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 689, Short.MAX_VALUE)
         .addGroup(layout.createSequentialGroup()
-            .addComponent(jButton2)
-            .addGap(0, 0, Short.MAX_VALUE))
+            .addContainerGap()
+            .addComponent(jLayeredPane3))
     );
     layout.setVerticalGroup(
         layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
         .addGroup(layout.createSequentialGroup()
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 376, Short.MAX_VALUE)
+            .addContainerGap()
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 342, Short.MAX_VALUE)
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-            .addComponent(jButton2))
+            .addComponent(jLayeredPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
     );
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
-        // TODO add your handling code here:
-        p = new Product(productID, txtName.getText(),
-                Integer.parseInt(txtQuantity.getText()),
-                Float.valueOf(txtSales.getText()),
-                "", taDescription.getText(),
-                cbmManufactureDate.getText(),
-                cbmExpiryDate.getText(),
-                txtBatchNo.getText(),
-                Float.valueOf(txtCost.getText()),
-                ((String) cbmSupplier.getSelectedItem()),//supplier from the combo selection
-                Integer.parseInt(cache.readProperty(String.valueOf(Property.constants.EMPLOYEE_ID))), //currently logged in employee in the system
-                "" + Product.Constants.UPDATE
-        );
-        //System.out.println(p.getEventType());
-        _requestEvent._fireEvents(new ProductEvent(this, p));
-        //        try {
-        //            // since the login class has access to the currently logged in employee
-        //            if (product.addProduct()) {
-        //                JOptionPane.showMessageDialog(null, "New Product saved..");
-        //            }
-        //        } catch (SQLException ex) {
-        //            Logger.getLogger(Products.class.getName()).log(Level.SEVERE, null, ex);
-        //        }
+        item.setEventType("" + NotExpiredItem.Constants.UPDATE);
+        item.setEmployeeID(Integer.parseInt(cache.readProperty(String.valueOf(Property.constants.EMPLOYEE_ID))));
+        item.setSupplierBusinessName(((String) cbmSupplier.getSelectedItem()));
+        item.setCostPrice(Float.valueOf(txtCost.getText()));
+        this.item.setName(txtName.getText());
+        this.item.setQuantity(Integer.parseInt(txtQuantity.getText()));
+        item.setPrice(Float.valueOf(txtSales.getText()));
+        item.setDescription(taDescription.getText());
+        item.setManufactureDate(cbmManufactureDate.getText());
+        item.setExpiryDate(cbmExpiryDate.getText());
+        item.setBatch(txtBatchNo.getText());
+        _requestEvent.notifyObservers();
+
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
@@ -516,18 +501,42 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         try {
-            dfm = ProductEdit.buildTableModel(p.getAllProducts());
-            this.jTable1.setCellSelectionEnabled(true);
-            this.jTable1.setModel(dfm);
-            jTable1.getColumn("Update").setCellRenderer(new ButtonRenderer("Update"));
-            jTable1.getColumn("Update").setCellEditor(new ButtonEditor(new JCheckBox()));
+            dfm = ProductEdit.buildTableModel(item.getAll());
+            this.productTable.setCellSelectionEnabled(true);
+            this.productTable.setModel(dfm);
 
-            jTable1.getColumn("Delete").setCellRenderer(new ButtonRenderer("Delete"));
-            jTable1.getColumn("Delete").setCellEditor(new ButtonEditor(new JCheckBox()));
         } catch (Exception ex) {
             Logger.getLogger(ProductEdit.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void updateRowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateRowActionPerformed
+        int row = productTable.getSelectedRow();
+        //System.out.println("" + productTable.getValueAt(row, 1));
+        if (row != -1) {
+            productID = Integer.parseInt(productTable.getValueAt(row, 1).toString());
+            item = new NotExpiredItem(new ConcreteItemByIdStrategy(productID), _requestEvent);
+            setProductData(item.getAll());
+
+        } else {
+            JOptionPane.showMessageDialog(null, "Please click on a row to edit");
+        }
+    }//GEN-LAST:event_updateRowActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void deleteRowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteRowActionPerformed
+        int row = productTable.getSelectedRow();
+if (row != -1) {
+            dfm.removeRow(productTable.getSelectedRow());
+            this.cartItemCount = this.cartItemCount != 0 ? this.cartItemCount-- : 0;
+            productTable.updateUI();
+        } else {
+            JOptionPane.showMessageDialog(null, "No Row has been selected", "Error Information", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }//GEN-LAST:event_deleteRowActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -537,9 +546,10 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
     private datechooser.beans.DateChooserCombo cbmManufactureDate;
     private javax.swing.JComboBox<String> cbmSupplier;
     private javax.swing.JLabel costError;
+    private javax.swing.JButton deleteRow;
+    private javax.swing.JDialog editProductDialog;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JDialog jDialog1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -551,10 +561,11 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLayeredPane jLayeredPane1;
     private javax.swing.JLayeredPane jLayeredPane2;
+    private javax.swing.JLayeredPane jLayeredPane3;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable productTable;
     private javax.swing.JLabel salesError;
     private javax.swing.JTextArea taDescription;
     private javax.swing.JTextField txtBatchNo;
@@ -563,27 +574,30 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
     private javax.swing.JTextField txtQuantity;
     private javax.swing.JFormattedTextField txtSales;
     private javax.swing.JPanel updatePanel;
+    private javax.swing.JButton updateRow;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public void OnPanelSwitched(JPanel panelToSwitch) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+    public void setProductData(ResultSet rs) {
+try {
+            while (rs.next()) {
+                txtName.setText(rs.getString("product_name"));
+                txtQuantity.setText("" + rs.getInt("stock_quantity"));
+                txtSales.setText("" + rs.getFloat("sell_price"));
+                taDescription.setText(rs.getString("product_description"));
+                txtBatchNo.setText(rs.getString("product_batch_no"));
+                txtCost.setText("" + rs.getFloat("cost_price"));
+                cbmSupplier.setSelectedItem(rs.getString("supplier_biz_name"));
+                cbmExpiryDate.setText(rs.getString("product_expiry_date"));
+                cbmManufactureDate.setText(rs.getString("product_manufacture_date"));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ProductEdit.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-    public void setProductData(Product p) {
-        System.out.println(p.getProductName());
-        txtName.setText(p.getProductName());
-        txtQuantity.setText("" + p.getProductQuantity());
-        txtSales.setText("" + p.getProductPrice());
-        taDescription.setText(p.getDescription());
-        txtBatchNo.setText(p.getProductBatch());
-        txtCost.setText("" + p.getCostPrice());
-        cbmSupplier.setSelectedItem(p.getSupplierID());
-        cbmExpiryDate.setText(p.getProductExpiryDate());
-        cbmManufactureDate.setText(p.getProductManufactureDate());
-        this.jDialog1.setTitle("Editing:  ".concat(p.getProductName().toUpperCase()));
-        this.jDialog1.setSize(600, 700);
-        this.jDialog1.show();
+        this.editProductDialog.setAlwaysOnTop(false);
+        this.editProductDialog.setTitle("Editing:  ".concat(txtName.getText().toUpperCase()));
+        this.editProductDialog.setSize(600, 700);
+        this.editProductDialog.show();
     }
 
     /**
@@ -605,91 +619,4 @@ public class ProductEdit extends javax.swing.JPanel implements Switchable {
         }
     }
 
-    class ButtonEditor extends DefaultCellEditor {
-
-        protected JButton button;
-        private String label;
-        private boolean isPushed;
-
-        public ButtonEditor(JCheckBox checkBox) {
-            super(checkBox);
-
-            button = new JButton();
-            //button.setOpaque(true);
-            button.addActionListener((ActionEvent e) -> {
-                System.out.println( e.getSource());
-                fireEditingStopped();
-            });
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
-            if (isSelected) {
-                button.setForeground(table.getSelectionForeground());
-                button.setBackground(table.getSelectionBackground());
-//label = ((JButton) value).getText();
-                //label = button.getText();
-            } else {
-                button.setForeground(table.getForeground());
-                button.setBackground(table.getBackground());
-            }
-            System.out.println(value.toString());
-            label = (value == null) ? "": value.toString();
-            button.setText(label);
-            isPushed = true;
-            return button;
-        }
-
-        @Override
-        public Object getCellEditorValue() {
-            if (isPushed) {
-                //System.out.println(label);
-                if (label.equals("Update")) {
-                    int[] selectedRow = jTable1.getSelectedRows();
-                    int[] selectedColumns = jTable1.getSelectedColumns();
-
-                    for (int i = 0; i < selectedRow.length; i++) {
-                        for (int j = 0; j < selectedColumns.length; j++) {
-                            productID = Integer.parseInt(jTable1.getValueAt(selectedRow[i], 1).toString());
-                            System.out.println(jTable1.getValueAt(selectedRow[i], 1).toString());
-                            try {
-
-                                setProductData(p.getProduct(productID));
-
-                                ///selection.setText(emptyPanel.jt.getValueAt(selectedRow[i], 0).toString()); 
-                            } catch (SQLException ex) {
-                                ex.printStackTrace();
-//                                Logger.getLogger(ProductEdit.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                    } //
-                    //
-                } else if (label.equals("Delete")) {
-                    try {
-                        if (p.removeProduct(productID)) {
-                            JOptionPane.showMessageDialog(null, "Product Removed");
-                        }
-                        ;
-                    } catch (SQLException ex) {
-                        Logger.getLogger(ButtonEditor.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-            isPushed = false;
-            return label;
-        }
-
-        @Override
-        public boolean stopCellEditing() {
-            isPushed = false;
-            return super.stopCellEditing();
-        }
-
-        @Override
-        protected void fireEditingStopped() {
-            super.fireEditingStopped();
-        }
-
-    }
 }

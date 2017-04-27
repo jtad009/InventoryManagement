@@ -1,21 +1,36 @@
 
 package inventorysystem.gui;
 
-import inventorysystem.Interface.Switchable;
-import javax.swing.JPanel;
+import inventory.strategy.ConcreteNotExpiredStrategy;
+import inventorysystem.data.ExpiredItem;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.print.PrinterException;
+import java.text.MessageFormat;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 /**
  *
  * @author Epic
  */
-public class Dashboard extends javax.swing.JPanel implements Switchable{
+public class Dashboard extends javax.swing.JPanel {
 
-    /**
-     * Creates new form Dashboard
-     */
+    private String tableTitle;
+    private DefaultTableModel threshold;
+    private ExpiredItem p;
     public Dashboard() {
+        this.tableTitle = "EXPIRY REPORT";
         initComponents();
         this.setName("Dashboard");
+        p = new ExpiredItem(new ConcreteNotExpiredStrategy());
+        modelTable.setModel(p.getModel());
+        lblExpiry.setText(p.getCount()+" Product Expiring in 2 weeks or less");
+        threshold = p.getThreshholdModel();
+        lblInventory.setText(p.getCount()+" Items Below inventory Threshold");
     }
 
     /**
@@ -27,24 +42,219 @@ public class Dashboard extends javax.swing.JPanel implements Switchable{
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jDialog1 = new javax.swing.JDialog();
+        jLayeredPane2 = new javax.swing.JLayeredPane();
+        jLabel2 = new javax.swing.JLabel();
+        from = new datechooser.beans.DateChooserCombo();
+        jLabel3 = new javax.swing.JLabel();
+        to = new datechooser.beans.DateChooserCombo();
+        jButton4 = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        jPanel1 = new javax.swing.JPanel();
+        lblExpiry = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
+        lblInventory = new javax.swing.JLabel();
+        jLayeredPane1 = new javax.swing.JLayeredPane();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        modelTable = new javax.swing.JTable(){
+            @Override
+            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+                Component comp = super.prepareRenderer(renderer, row, column);
+                comp.setBackground(row % 2 == 0 ? Color.WHITE : Color.LIGHT_GRAY);
+                return comp;
+            }
+        };
+
+        jLayeredPane2.setLayout(new java.awt.FlowLayout());
+
+        jLabel2.setText("From");
+        jLayeredPane2.add(jLabel2);
+        jLayeredPane2.add(from);
+
+        jLabel3.setText("To:");
+        jLayeredPane2.add(jLabel3);
+        jLayeredPane2.add(to);
+
+        jButton4.setText("Search");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+        jLayeredPane2.add(jButton4);
+
+        jDialog1.getContentPane().add(jLayeredPane2, java.awt.BorderLayout.CENTER);
+
+        jLabel4.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel4.setText("SELECT DATE RANGE");
+        jDialog1.getContentPane().add(jLabel4, java.awt.BorderLayout.PAGE_START);
+
+        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+
+        lblExpiry.setBackground(new java.awt.Color(204, 0, 51));
+        lblExpiry.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
+        lblExpiry.setForeground(new java.awt.Color(0, 0, 0));
+        lblExpiry.setText("20 Product Expiring in 2 weeks");
+
+        jLabel1.setFont(new java.awt.Font("Dialog", 1, 13)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel1.setText("Notification:");
+
+        lblInventory.setBackground(new java.awt.Color(204, 0, 51));
+        lblInventory.setFont(new java.awt.Font("Dialog", 1, 12)); // NOI18N
+        lblInventory.setForeground(new java.awt.Color(0, 0, 0));
+        lblInventory.setText("20 Items Below inventory Threshold");
+
+        jLayeredPane1.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Report Maker", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Dialog", 0, 11), new java.awt.Color(0, 0, 0))); // NOI18N
+        jLayeredPane1.setLayout(new java.awt.FlowLayout());
+
+        jButton1.setText("Expiry Report");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jLayeredPane1.add(jButton1);
+
+        jButton2.setText("Inventory Report");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+        jLayeredPane1.add(jButton2);
+
+        jButton3.setText("Print Table");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+        jLayeredPane1.add(jButton3);
+
+        jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
+
+        modelTable.setBackground(new java.awt.Color(255, 255, 255));
+        modelTable.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+        modelTable.setForeground(new java.awt.Color(0, 0, 0));
+        modelTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        modelTable.setSelectionForeground(new java.awt.Color(0, 0, 0));
+        jScrollPane1.setViewportView(modelTable);
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLayeredPane1)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(lblExpiry)
+                                .addGap(45, 45, 45)
+                                .addComponent(lblInventory))
+                            .addComponent(jLabel1))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 666, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(19, 19, 19)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblExpiry)
+                    .addComponent(lblInventory))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLayeredPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Expiry", jPanel1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    @Override
-    public void OnPanelSwitched(JPanel panelToSwitch) {
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        try {
+          MessageFormat headerFormat = new MessageFormat("LIST OF EXPIRED DRUGS");
+          MessageFormat footerFormat = new MessageFormat("- {0} -");
+          modelTable.print(JTable.PrintMode.FIT_WIDTH,headerFormat,footerFormat);
+        } catch (PrinterException ex) {
+            Logger.getLogger(Dashboard.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        this.tableTitle = "EXPIRY REPORT";
+        modelTable.setModel(p.getModel());
+        lblExpiry.setText(p.getCount()+" Product Expiring in 2 weeks or less");
         
-    }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        this.tableTitle = "INVENTORY REPORT FOR ";
+        modelTable.setModel(threshold);
+                lblInventory.setText(p.getCount()+" Items Below inventory Threshold");
+
+    }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        // TODO add your handling code here:
+        
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+   
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private datechooser.beans.DateChooserCombo from;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
+    private javax.swing.JDialog jDialog1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLayeredPane jLayeredPane1;
+    private javax.swing.JLayeredPane jLayeredPane2;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JLabel lblExpiry;
+    private javax.swing.JLabel lblInventory;
+    private javax.swing.JTable modelTable;
+    private datechooser.beans.DateChooserCombo to;
     // End of variables declaration//GEN-END:variables
 }

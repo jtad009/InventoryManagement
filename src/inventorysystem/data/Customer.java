@@ -1,9 +1,9 @@
 package inventorysystem.data;
 
+import inventorysystem.Interface.InventoryQueryStrategy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 import java.util.logging.Logger;
 
 /**
@@ -16,13 +16,13 @@ public class Customer {
     private String customerFirstName;
     private String customerLastName;
     private String customerGender;
-    private Date customerBirthDate;
+    private String customerBirthDate;
 
     private int customerId;
     private String customerTelephone;
     private String customerAddress;
     private String paymentMode;
-    private DBConnectionClass bConnectionClass;
+    private final DBConnectionClass bConnectionClass;
     private static final Logger LOG = Logger.getLogger(Customer.class.getName());
 
     public Customer() {
@@ -39,7 +39,7 @@ public class Customer {
  * @param customerAddress
  * @param paymentMode 
  */
-    public Customer(String customerFirstName, String customerLastName, String customerGender, Date customerBirthDate, int customerId, String customerTelephone, String customerAddress, String paymentMode) {
+    public Customer(String customerFirstName, String customerLastName, String customerGender, String customerBirthDate, int customerId, String customerTelephone, String customerAddress, String paymentMode) {
         this.customerFirstName = customerFirstName;
         this.customerLastName = customerLastName;
         this.customerGender = customerGender;
@@ -53,6 +53,7 @@ public class Customer {
 
     /**
      * @return the customerFirstName
+     * cc 2 = 1, cc= 1
      */
     public String getCustomerFirstName() {
         return customerFirstName;
@@ -67,6 +68,7 @@ public class Customer {
 
     /**
      * @return the customerId
+     * cc2 = 1, cc= 1
      */
     public int getCustomerId() {
         return customerId;
@@ -80,6 +82,7 @@ public class Customer {
     }
 
     /**
+     * cc2 = 1, cc = 1
      * @return the customerTelephone
      */
     public String getCustomerTelephone() {
@@ -94,6 +97,7 @@ public class Customer {
     }
 
     /**
+     * cc2 = 1, cc = 1
      * @return the customerAddress
      */
     public String getCustomerAddress() {
@@ -108,6 +112,7 @@ public class Customer {
     }
 
     /**
+     * cc2 = 1, cc = 1
      * @return the paymentMode
      */
     public String getPaymentMode() {
@@ -120,89 +125,81 @@ public class Customer {
     public void setPaymentMode(String paymentMode) {
         this.paymentMode = paymentMode;
     }
-
+/**
+ * cc2 = 2, cc = 2
+ * Register a new customer to system
+ * @return boolean
+ * @throws SQLException 
+ */
     public Boolean addCustomer() throws SQLException {
-        boolean isSaved = false;
-        if (null != this.bConnectionClass.getConnection()) {
-            Statement s = this.bConnectionClass.getConnection().createStatement();
-            if(s.execute("INSERT INTO customers "
+       Statement s = this.bConnectionClass.getConnection().createStatement();
+        s.execute("INSERT INTO customers "
                     + "(first_name,last_name,gender,birth_date,address,phone) "
-                    + "VALUES('"+getCustomerFirstName()+"','"+getCustomerLastName()+"','"+getCustomerGender()+"'"
-                    + "'"+getCustomerBirthDate().toString()+"','"+getCustomerAddress()+"','"+getCustomerTelephone()+"')"))
-                    isSaved = true;
-        }
-        return isSaved;
+                    + "VALUES('"+getCustomerFirstName()+"','"+getCustomerLastName()+"','"+getCustomerGender()+"',"
+                    + "'"+getCustomerBirthDate().toString()+"','"+getCustomerAddress()+"','"+getCustomerTelephone()+"')");
+        return s.getUpdateCount() == 1;
     }
     /**
      * Delete Customer From database
      * @param customerId
      * @return boolean true on delete success
      * @throws SQLException 
+     * cc2 = 2, cc = 2
      */
     public Boolean deleteCustomer(int customerId) throws SQLException {
-        boolean isDeleted = false;
-        if (null != this.bConnectionClass.getConnection()) {
-            Statement s = this.bConnectionClass.getConnection().createStatement();
-            if(s.execute("DELETE FROM customers WHERE customer_id='"+customerId+"'"))
-                    isDeleted = true;
-        }
-        return isDeleted;
+        Statement s = this.bConnectionClass.getConnection().createStatement();
+        s.execute("DELETE FROM customers WHERE customer_id='"+customerId+"'");
+        return s.getUpdateCount() == 1;
     }
     /**
+     * cc2 = 2, cc= 2
      * Update customer information
      * @param customerId
      * @return boolean true on success 
      * @throws SQLException 
      */
     public Boolean updateCustomer(int customerId) throws SQLException {
-        boolean isDeleted = false;
-        if (null != this.bConnectionClass.getConnection()) {
-            Statement s = this.bConnectionClass.getConnection().createStatement();
-            if(s.execute("UPDATE  customers SET  "
+        Statement s = this.bConnectionClass.getConnection().createStatement();
+        s.execute("UPDATE  customers SET  "
                     + "first_name = '"+getCustomerFirstName()+"',last_name = '"+getCustomerLastName()+"',gender = '"+getCustomerGender()+"',birth_date = '"+getCustomerBirthDate().toString()+"',address = '"+getCustomerAddress()+"',phone = '"+getCustomerTelephone()+"' "
-                    + "WHERE customer_id = '"+customerId+"'"))
-                    isDeleted = true;
-        }
-        return isDeleted;
+                    + "WHERE customer_id = '"+customerId+"'");
+             
+        return s.getUpdateCount() == 1;
     }
     /**
+     * CC 2 = 1, cc = 1
      * Get Customer Object
+     * can be refractored to use a stategy
      * @param customerId the id of customer to retrieve
-     * @param allCustomers boolean she retrieve all customers
+     * @param strategy
+     * 
      * @return A Customer Object
      * @throws SQLException 
      */
-public Customer getCustomer(int customerId,boolean allCustomers) throws SQLException{
+public Customer getCustomer(int customerId,InventoryQueryStrategy strategy) throws SQLException{
     Customer customer = null;
-    String sql = "";
-    if(allCustomers){// if shud select all customers
-        sql = "SELECT * FROM customers";
-    }else {
-        sql = "SELECT * FROM customers where customer_id = '"+customerId+"'";
-    }
-    if(this.bConnectionClass.getConnection() != null && !sql.isEmpty()){ 
     //if there is a connection to db and sql query is not empty
         Statement s = this.bConnectionClass.getConnection().createStatement();
-        ResultSet resultSet = s.executeQuery(sql);
+        ResultSet resultSet = s.executeQuery(strategy.run());
         
         while (resultSet.next()) {
             customer = new Customer(
                     resultSet.getString("first_name"),
                     resultSet.getString("last_name"),
                     resultSet.getString("gender"),
-                    new Date(resultSet.getString("birth_date")),
+                    resultSet.getString("birth_date"),
                     resultSet.getInt("customer_id"),
                     resultSet.getString("phone"),
                     resultSet.getString("address"),
                     "No Payment Method Selected."
             );
             
-        }
+        
     }
     return customer;
 }
 
-    /**
+    /**cc2 = 1, cc = 1
      * @return the customerLastName
      */
     public String getCustomerLastName() {
@@ -218,6 +215,7 @@ public Customer getCustomer(int customerId,boolean allCustomers) throws SQLExcep
 
     /**
      * @return the customerGender
+     * cc 2 = 1, cc =1 
      */
     public String getCustomerGender() {
         return customerGender;
@@ -231,16 +229,17 @@ public Customer getCustomer(int customerId,boolean allCustomers) throws SQLExcep
     }
 
     /**
+     * cc 2 =1 , cc = 1
      * @return the customerBirthDate
      */
-    public Date getCustomerBirthDate() {
+    public String getCustomerBirthDate() {
         return customerBirthDate;
     }
 
     /**
      * @param customerBirthDate the customerBirthDate to set
      */
-    public void setCustomerBirthDate(Date customerBirthDate) {
+    public void setCustomerBirthDate(String customerBirthDate) {
         this.customerBirthDate = customerBirthDate;
     }
 }

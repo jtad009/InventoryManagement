@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package inventorysystem.Events;
 
 import inventorysystem.data.Employee;
@@ -18,11 +13,6 @@ public class LoginEvent extends EventObject {
         super(source);
         _thisEmployee = employee;
     }
-   public void setEmployee(Employee employee)
-   {
-       _thisEmployee = employee;
-   }
-    public Employee getEmployee(){
-        return  _thisEmployee;
-    }
+   public void setEmployee(Employee employee){_thisEmployee = employee; }
+    public Employee getEmployee(){return  _thisEmployee; }
 }

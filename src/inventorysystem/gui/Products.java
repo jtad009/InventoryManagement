@@ -5,17 +5,13 @@
  */
 package inventorysystem.gui;
 
-import com.sun.glass.events.KeyEvent;
 import inventorysystem.Events.LoginEvent;
 import inventorysystem.Events.ProductEvent;
-import inventorysystem.Events.Request;
-import inventorysystem.Interface.LoginImplementation;
-import inventorysystem.Interface.LoginInterface;
-import inventorysystem.Interface.Switchable;
-import inventorysystem.Property;
-import inventorysystem.data.Employee;
-import inventorysystem.data.NumberFormater;
-import inventorysystem.data.Product;
+import inventory.concrete.ConcreteInventoryObservable;
+import inventory.strategy.ConcreteNotExpiredStrategy;
+import libs.Property;
+import libs.NumberFormater;
+import inventorysystem.data.NotExpiredItem;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,34 +19,30 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
 /**
  *
  * @author Epic
  */
-public class Products extends javax.swing.JPanel implements Switchable, LoginInterface {
+public class Products extends javax.swing.JPanel {
 
     /**
      * Creates new form Products
      */
-    private Request _requestEvent;
+    private ConcreteInventoryObservable _setObserver;
 
     private LoginEvent event;
     private Property cache;
-
-    public Products(Request r) {
+    private final NotExpiredItem item;
+    public Products(ConcreteInventoryObservable r) {
         initComponents();
         this.setName("Product");
         this.fillSupplierList();
-        
-        _requestEvent = r;
-        _requestEvent.addProductListener(new Product());
-
-        cache = new Property();
-        cbmManufactureDate.setDateFormat(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss "));
-        cbmExpiryDate.setDateFormat(new SimpleDateFormat("yyyy.MM.dd HH:mm:ss"));
+        _setObserver = r;
+        item = new NotExpiredItem(new ConcreteNotExpiredStrategy(),_setObserver);
+cache = new Property();
+        cbmManufactureDate.setDateFormat(new SimpleDateFormat("yyyy/MM/dd"));
+        cbmExpiryDate.setDateFormat(new SimpleDateFormat("yyyy/MM/dd"));
     }
 
     /**
@@ -287,32 +279,23 @@ public class Products extends javax.swing.JPanel implements Switchable, LoginInt
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
-        // TODO add your handling code here:
-        Product product = new Product(0, txtName.getText(),
-                Integer.parseInt(txtQuantity.getText()),
-                Float.valueOf(txtSales.getText()),
-                "", taDescription.getText(),
-                cbmManufactureDate.getText(),
-                cbmExpiryDate.getText(),
-                txtBatchNo.getText(),
-                Float.valueOf(txtCost.getText()),
-                ((String) cbmSupplier.getSelectedItem()),//supplier from the combo selection 
-                    Integer.parseInt(cache.readProperty(String.valueOf(Property.constants.EMPLOYEE_ID))), //currently logged in employee in the system
-                ""+Product.Constants.ADD
-        );
-        _requestEvent._fireEvents(new ProductEvent(this, product));
-//        try {
-//            // since the login class has access to the currently logged in employee
-//            if (product.addProduct()) {
-//                JOptionPane.showMessageDialog(null, "New Product saved..");
-//            }
-//        } catch (SQLException ex) {
-//            Logger.getLogger(Products.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        item.setEventType(""+NotExpiredItem.Constants.ADD);
+        item.setEmployeeID( Integer.parseInt(cache.readProperty(String.valueOf(Property.constants.EMPLOYEE_ID))));
+        item.setSupplierBusinessName(((String) cbmSupplier.getSelectedItem()));
+        item.setCostPrice(Float.valueOf(txtCost.getText()));
+        this.item.setName(txtName.getText());
+        this.item.setQuantity(Integer.parseInt(txtQuantity.getText()));
+        item.setPrice(Float.valueOf(txtSales.getText()));
+        item.setDescription(taDescription.getText());
+        item.setManufactureDate(cbmManufactureDate.getText());
+        item.setExpiryDate(cbmExpiryDate.getText());
+        item.setBatch( txtBatchNo.getText());
+        _setObserver.setEvent(new ProductEvent(this, item));
+        _setObserver.notifyObservers();
+
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
-        // TODO add your handling code here:
         txtName.setText("");
         txtQuantity.setText("");
         txtSales.setText((""));
@@ -364,10 +347,6 @@ public class Products extends javax.swing.JPanel implements Switchable, LoginInt
     private javax.swing.JFormattedTextField txtSales;
     // End of variables declaration//GEN-END:variables
 
-    @Override
-    public void OnPanelSwitched(JPanel panelToSwitch) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
     /**
      * Get a list of suppliers and fill the suppler comboList
@@ -386,14 +365,5 @@ public class Products extends javax.swing.JPanel implements Switchable, LoginInt
         } catch (SQLException ex) {
             Logger.getLogger(Products.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    @Override
-    public void handleEvent(LoginEvent event) {
-        txtName.setText(event.getEmployee().getFullname());
-        if (event.getSource().equals(login.class)) {
-            System.out.println("Current Employee " + event.getEmployee().getFullname());
-        }
-
     }
 }

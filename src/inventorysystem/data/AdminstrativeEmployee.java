@@ -1,20 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package inventorysystem.data;
 
 /**
  *
  * @author Epic
  */
-public class AdminstrativeEmployee extends Employee {
+public final class AdminstrativeEmployee extends Employee {
 
     private String employeeType;
 
-    public AdminstrativeEmployee(String fullname, String username, int employeeId, String gender, String dateOfBirth, String address) {
+    public AdminstrativeEmployee(String fullname, String username, int employeeId, String gender, String dateOfBirth, String address, String employeeType) {
         super(fullname, username, employeeId, gender, dateOfBirth, address);
+        setEmployeeType(employeeType);
     }
 
     public void setEmployeeType(String type) {
@@ -28,10 +24,10 @@ public class AdminstrativeEmployee extends Employee {
 
     @Override
     public String toString() {
-        return "Employee Id: "+getEmployeeId()+
-                " Username "+getUsername()+
-                " fullname "+getFullname()+
-                " usertype "+getEmployeeType();
+        return "Employee Id: " + getEmployeeId()
+                + " Username " + getUsername()
+                + " fullname " + getFullname()
+                + " usertype " + getEmployeeType();
     }
 
 }

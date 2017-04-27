@@ -2,20 +2,20 @@
 package inventorysystem.Events;
 
 import java.util.EventObject;
-import inventorysystem.data.Product;
+import inventorysystem.data.NotExpiredItem;
 /**
  * When a product is added to the inventory, The product event is called 
  * @author Israel Edet
  */
 public class ProductEvent extends EventObject {
-    Product _thisProduct ;
+    NotExpiredItem _thisProduct ;
     
     /**
      * Constructor for product event
      * @param source
      * @param product 
      */
-    public ProductEvent(Object source, Product product) {
+    public ProductEvent(Object source, NotExpiredItem product) {
         super(source);
         _thisProduct = product;
     }
@@ -23,7 +23,5 @@ public class ProductEvent extends EventObject {
      * Get the current product
      * @return product
      */
-    public Product getProduct(){
-        return _thisProduct;
-    }
+    public NotExpiredItem getProduct(){  return _thisProduct;  }
 }

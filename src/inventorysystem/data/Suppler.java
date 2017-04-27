@@ -19,6 +19,7 @@ import java.util.logging.Logger;
  * @author Epic
  */
 public class Suppler {
+
     private int supplerId;
     private String supplerName;
     private String supplerAddress;
@@ -38,6 +39,7 @@ public class Suppler {
     public Suppler() {
         connectionClass = new DBConnectionClass();
     }
+
     public Suppler(int supplierId, String supplierName, String supplierAddress, String supplierPhone, String supplerBusinessName) {
         this.supplerId = supplierId;
         this.supplerName = supplierName;
@@ -102,95 +104,92 @@ public class Suppler {
     public void setSupplerPhone(String supplerPhone) {
         this.supplerPhone = supplerPhone;
     }
+
     /**
      * Add a new supplier to the database
+     *
      * @return Boolean true if information is saved
-     * @throws SQLException 
+     * @throws SQLException
      */
-    public Boolean addSupplier() throws SQLException{
-        
+    public Boolean addSupplier() throws SQLException {
+
         DateFormat df = new SimpleDateFormat("yyyy/MM/DD");
         Date date = new Date();
         Statement statement = this.connectionClass.getConnection().createStatement();
-        
-        return statement.execute("INSERT INTO suppliers (supplier_name,supplier_date,supplier_phone,supplier_biz_name,supplier_address)"
-                + " VALUES('"+getSupplerName()+"','"+df.format(date)+"','"+getSupplerPhone()+"','"+getSupplerBusinessName()+"','"+getSupplerAddress()+"')");
-         
-        
+        statement.execute("INSERT INTO suppliers (supplier_name,supplier_date,supplier_phone,supplier_biz_name,supplier_address)"
+                + " VALUES('" + getSupplerName() + "','" + df.format(date) + "','" + getSupplerPhone() + "','" + getSupplerBusinessName() + "','" + getSupplerAddress() + "')", Statement.RETURN_GENERATED_KEYS);
+        ResultSet resultSet = statement.getGeneratedKeys();
+        return resultSet != null;
     }
+
     /**
      * Update supplier information
+     *
      * @param supplierId
      * @return Boolean true if information is updated
-     * @throws SQLException 
+     * @throws SQLException
      */
-    public Boolean updateSupplier(int supplierId) throws SQLException{
-        boolean isSaved = false;
-        
+    public Boolean updateSupplier(int supplierId) throws SQLException {
         Statement statement = this.connectionClass.getConnection().createStatement();
-        if(statement.execute("UPDATE suppliers SET supplier_name = '"+getSupplerName()+"',supplier_phone = '"+getSupplerPhone()+"' WHERE supplier_id = '"+supplierId+"')"))
-            isSaved = true;
-        return isSaved;
+        statement.execute("UPDATE suppliers SET `supplier_name` = '" + this.getSupplerName() + "',`supplier_phone` = '" + this.getSupplerPhone() + "' WHERE `supplier_id` = '" + supplierId + "'");
+        return statement.getUpdateCount() != -1;
     }
+
     /**
      * Delete a supplier from database
+     *
      * @param supplierId
-     * @return
-     * @throws SQLException 
+     * @return boolean true is the record is deleted
+     * @throws SQLException
      */
-    public  Boolean removeSupplier(int supplierId) throws SQLException{
-        boolean isDeleted = false;
+    public Boolean removeSupplier(int supplierId) throws SQLException {
         Statement statement = this.connectionClass.getConnection().createStatement();
-        if(statement.execute("DELETE FROM suppliers WHERE supplier_id = '"+supplierId+"'"))
-            isDeleted = true;
-        return  isDeleted;
+        statement.execute("DELETE FROM suppliers WHERE supplier_id = '" + supplierId + "'");
+        return statement.getUpdateCount() != -1;
     }
-   /**
+
+    /**
      * Get Suppler Object
-     * @param supplierBizName  the bix name of supplier to retrieve
-     * @param allSupplier  boolean should retrieve all supplier
+     *
+     * @param supplierBizName the bix name of supplier to retrieve
+     * @param allSupplier boolean should retrieve all supplier
      * @return A Suppler Object
-     * @throws SQLException 
+     * @throws SQLException
      */
-public ArrayList<Suppler> getSupplier(String supplierBizName,boolean allSupplier) throws SQLException{
-    ArrayList<Suppler> supplierList = new ArrayList<>();
-    Suppler supplier = null;
-    String sql = "";
-    if(allSupplier){// if shud select all customers
-        sql = "SELECT * FROM suppliers";
-    }else {
-        sql = "SELECT * FROM suppliers where supplier_biz_name = '"+supplierBizName+"'";
-    }
-    if(this.connectionClass.getConnection() != null && !sql.isEmpty()){ 
-    //if there is a connection to db and sql query is not empty
-        Statement s = this.connectionClass.getConnection().createStatement();
-        ResultSet resultSet = s.executeQuery(sql);
-        
-        while (resultSet.next()) {
-            supplier = new Suppler(
-                    resultSet.getInt("supplier_id"),
-                    resultSet.getString("supplier_name"),
-                    resultSet.getString("supplier_address"),
-                    resultSet.getString("supplier_phone"),
-                    resultSet.getString("supplier_biz_name")
-             );
-            supplierList.add(supplier);
+    public ArrayList<Suppler> getSupplier(String supplierBizName, boolean allSupplier) throws SQLException {
+        ArrayList<Suppler> supplierList = new ArrayList<>();
+        Suppler supplier = null;
+        String sql = "SELECT * FROM suppliers";
+        if (allSupplier) {// if shud select all customers
+            sql = "SELECT * FROM suppliers where supplier_biz_name = '" + supplierBizName + "'";
         }
+        //if there is a connection to db and sql query is not empty
+            Statement s = this.connectionClass.getConnection().createStatement();
+            ResultSet resultSet = s.executeQuery(sql);
+        while (resultSet.next()) {
+                supplier = new Suppler(
+                        resultSet.getInt("supplier_id"),
+                        resultSet.getString("supplier_name"),
+                        resultSet.getString("supplier_address"),
+                        resultSet.getString("supplier_phone"),
+                        resultSet.getString("supplier_biz_name")
+                );
+                supplierList.add(supplier);
+            }
+         return supplierList;
     }
-    return supplierList;
-}
-/**
- * Check if a value already exist in the database
- * @param columnToSearch
- * @param valueToSearchFor
- * @return true if no unique
- */
-public boolean checkIfExist(String columnToSearch,String valueToSearchFor) throws SQLException{
-    Statement s = this.connectionClass.getConnection().createStatement();
-    ResultSet resultSet = s.executeQuery("select * from suppliers where `"+columnToSearch+"` = '"+valueToSearchFor+"'");
-    if (resultSet.first()) {
-        return true;
+
+    /**
+     * Check if a value already exist in the database
+     *
+     * @param columnToSearch
+     * @param valueToSearchFor
+     * @return true if no unique
+     * @throws java.sql.SQLException
+     */
+    public boolean checkIfExist(String columnToSearch, String valueToSearchFor) throws SQLException {
+        Statement s = this.connectionClass.getConnection().createStatement();
+        ResultSet resultSet = s.executeQuery("select * from suppliers where `" + columnToSearch + "` = '" + valueToSearchFor + "'");
+        return resultSet.first() != false;
     }
-    return false;
-}
 }

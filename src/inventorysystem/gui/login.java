@@ -5,42 +5,28 @@
  */
 package inventorysystem.gui;
 
+import inventory.concrete.ConcreteInventoryObservable;
 import inventorysystem.Events.LoginEvent;
-import inventorysystem.Events.Request;
-import inventorysystem.Interface.LoginImplementation;
-import inventorysystem.Interface.LoginInterface;
 import inventorysystem.data.Employee;
-import inventorysystem.data.Login;
+import inventory.concrete.ConcreteLoginObserver;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import inventorysystem.InventorySystem;
-import inventorysystem.Interface.Switchable;
-import inventorysystem.data.SalesEmployee;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JButton;
 
 /**
  *
  * @author Epic
  */
-public class login extends javax.swing.JPanel implements Switchable, LoginInterface {
+public class login extends javax.swing.JPanel {
 
     private static boolean loggedIn = false;
     private Employee currentEmployee = null;
-    /**
-     * Creates new form login
-     */
-    private Request _requestEvent;
+    private final ConcreteInventoryObservable _requestEvent;
 
-    public login(Request r) {
+    public login(ConcreteInventoryObservable r) {
         initComponents();
-        this.setName("Login Panel");
+        setName("Login Panel");
         _requestEvent = r;
-        _requestEvent.addLoginListener(new LoginImplementation());
     }
 
     /**
@@ -138,19 +124,15 @@ public class login extends javax.swing.JPanel implements Switchable, LoginInterf
                 .addGap(32, 32, 32))
         );
     }// </editor-fold>//GEN-END:initComponents
-
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
-        // TODO add your handling code here:
         performLogin();
     }//GEN-LAST:event_btnLoginActionPerformed
 
     private void txtPasswordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtPasswordKeyPressed
-        // TODO add your handling code here:
         if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
             performLogin();
         }
     }//GEN-LAST:event_txtPasswordKeyPressed
-
 // <editor-fold defaultstate="collapsed" desc="Initialize variables">       
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnLogin;
@@ -162,19 +144,6 @@ public class login extends javax.swing.JPanel implements Switchable, LoginInterf
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 //</editor-fold>
-
-    @Override
-    public void OnPanelSwitched(JPanel panelToSwitch) {
-        try {
-            InventorySystem.switchPanel(panelToSwitch, loggedIn);
-
-        } catch (Exception ex) {
-            Logger.getLogger(login.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-        System.out.println("I have been called oh bro to change the panel " + panelToSwitch.getName());
-    }
-
     public static boolean isLoggedIn() {
         return loggedIn;
     }
@@ -182,42 +151,25 @@ public class login extends javax.swing.JPanel implements Switchable, LoginInterf
     public Employee getCurrentEmployee() {
         return currentEmployee;
     }
-
     private static final Logger LOG = Logger.getLogger(login.class
             .getName());
 
-    @Override
-    public void handleEvent(LoginEvent event) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     private void performLogin() {
         if (!txtPassword.getText().isEmpty() && !txtUsername.getText().isEmpty()) {
-            Login l = new Login();
+            ConcreteLoginObserver l = new ConcreteLoginObserver(_requestEvent);
             this.currentEmployee = l.isUser(txtUsername.getText(), txtPassword.getText());
-
             if (null != this.currentEmployee) {
-                _requestEvent._fireEvents(new LoginEvent(this, currentEmployee)); // tell the listener to save the name of the employee saved
-                //_requestEvent.addLoginListener(new Products(_requestEvent));
+                _requestEvent.setEvent(new LoginEvent(l, currentEmployee));
+                //called here
+                _requestEvent.notifyObservers(); // tell the listener to save the name of the employee saved
+                //_requestEvent.add(new Products(_requestEvent));
                 lblWrong.setVisible(false);
                 JOptionPane.showMessageDialog(null, "Welcome ".concat(this.currentEmployee.getUsername()));
                 loggedIn = true;
-
-                //Goto new panel on the block
-                setUserScreen();
             } else {
                 lblWrong.setVisible(true);
             }
         }
     }
-    /**
-     * Set up screen according to the currently logged in user type
-     */
-    private void setUserScreen(){
-        if(this.currentEmployee instanceof SalesEmployee){
-            this.OnPanelSwitched(new Sales());
-        }else{
-            this.OnPanelSwitched(new Dashboard());
-        }
-    }
+
 }
